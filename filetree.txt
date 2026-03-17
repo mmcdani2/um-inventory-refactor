@@ -1,0 +1,68 @@
+﻿Folder PATH listing
+Volume serial number is BA6C-DA56
+C:\USERS\TENNE\DOCUMENTS\GITHUB-PROJECTS\UM-INVENTORY-REFACTOR\SRC
+|   middleware.ts
+|   
++---app
+|   |   globals.css
+|   |   layout.tsx
+|   |   page.tsx
+|   |   
+|   +---(platform)
+|   |   +---activity
+|   |   +---checkout
+|   |   +---counts
+|   |   +---dashboard
+|   |   +---items
+|   |   |       page.tsx
+|   |   |       
+|   |   +---locations
+|   |   +---receive
+|   |   \---transfers
+|   +---api
+|   |   \---test
+|   |           route.ts
+|   |           
+|   +---dashboard
+|   |       page.tsx
+|   |       
+|   +---sandbox
+|   |       page.tsx
+|   |       
+|   +---sign-in
+|   |   \---[[...sign-in]]
+|   |           page.tsx
+|   |           
+|   \---sign-up
+|       \---[[...sign-up]]
+|               page.tsx
+|               
++---components
+|   +---items
+|   |       items-create-card.tsx
+|   |       items-list-card.tsx
+|   |       items-page-header.tsx
+|   |       items-search-card.tsx
+|   |       
+|   \---ui
+|           badge.tsx
+|           button.tsx
+|           card.tsx
+|           dialog.tsx
+|           dropdown-menu.tsx
+|           input.tsx
+|           sheet.tsx
+|           skeleton.tsx
+|           table.tsx
+|           textarea.tsx
+|           
+\---lib
+    |   prisma.ts
+    |   utils.ts
+    |   
+    +---services
+    |       items.ts
+    |       
+    \---validators
+            items.ts
+            
