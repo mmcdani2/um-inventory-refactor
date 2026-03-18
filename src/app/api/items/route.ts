@@ -29,6 +29,7 @@ export async function POST(request: Request) {
       name?: string
       uom?: string
       barcode?: string
+      cost?: number | string
       aliases?: string
     }
 
@@ -37,6 +38,7 @@ export async function POST(request: Request) {
       name: body.name ?? "",
       uom: body.uom ?? "",
       barcode: body.barcode ?? "",
+      cost: body.cost,
       aliases: body.aliases ?? "",
       createdBy: userId ?? "dev-local-user",
     })

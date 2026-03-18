@@ -38,5 +38,7 @@ model Item {
   sku         String?
   barcode     String?     @unique
   createdAt   DateTime    @default(now())
+  uom         String?     @db.VarChar
+  cost        Decimal?    @db.Decimal
   inventories Inventory[]
 }

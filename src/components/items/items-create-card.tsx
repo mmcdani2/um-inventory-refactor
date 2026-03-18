@@ -19,6 +19,7 @@ type CreateItemFormValues = {
   name: string
   uom: string
   barcode: string
+  cost: string
   aliases: string
 }
 
@@ -33,6 +34,7 @@ const initialValues: CreateItemFormValues = {
   name: "",
   uom: "",
   barcode: "",
+  cost: "",
   aliases: "",
 }
 
@@ -80,6 +82,16 @@ export function ItemsCreateCard({
       nextErrors.uom = "UOM is required."
     }
 
+    if (nextValues.cost.trim()) {
+      const costValue = Number(nextValues.cost)
+
+      if (Number.isNaN(costValue)) {
+        nextErrors.cost = "Cost must be a valid number."
+      } else if (costValue < 0) {
+        nextErrors.cost = "Cost cannot be negative."
+      }
+    }
+
     return nextErrors
   }
 
@@ -91,6 +103,7 @@ export function ItemsCreateCard({
       name: values.name.trim(),
       uom: values.uom.trim(),
       barcode: values.barcode.trim(),
+      cost: values.cost.trim(),
       aliases: values.aliases.trim(),
     }
 
@@ -108,6 +121,8 @@ export function ItemsCreateCard({
     try {
       setIsSubmitting(true)
       await onSubmit(trimmedValues)
+      setValues(initialValues)
+      setErrors(initialErrors)
     } finally {
       setIsSubmitting(false)
     }
@@ -136,7 +151,7 @@ export function ItemsCreateCard({
                 id="item-sku"
                 name="sku"
                 placeholder="FILTER-1224-01"
-                value={values.sku}
+                value={values.sku ?? ""}
                 onChange={(event) => updateField("sku", event.target.value)}
                 aria-invalid={Boolean(errors.sku)}
                 aria-describedby={errors.sku ? "item-sku-error" : undefined}
@@ -160,7 +175,7 @@ export function ItemsCreateCard({
                 id="item-name"
                 name="name"
                 placeholder="Filter 12x24x1"
-                value={values.name}
+                value={values.name ?? ""}
                 onChange={(event) => updateField("name", event.target.value)}
                 aria-invalid={Boolean(errors.name)}
                 aria-describedby={errors.name ? "item-name-error" : undefined}
@@ -184,7 +199,7 @@ export function ItemsCreateCard({
                 id="item-uom"
                 name="uom"
                 placeholder="Each"
-                value={values.uom}
+                value={values.uom ?? ""}
                 onChange={(event) => updateField("uom", event.target.value)}
                 aria-invalid={Boolean(errors.uom)}
                 aria-describedby={errors.uom ? "item-uom-error" : undefined}
@@ -208,10 +223,37 @@ export function ItemsCreateCard({
                 id="item-barcode"
                 name="barcode"
                 placeholder="Optional barcode"
-                value={values.barcode}
+                value={values.barcode ?? ""}
                 onChange={(event) => updateField("barcode", event.target.value)}
                 className="h-11 border-white/10 bg-slate-950/40 text-white placeholder:text-slate-500"
               />
+            </div>
+
+            <div className="space-y-2 sm:col-span-2">
+              <label
+                className="text-sm font-medium text-slate-200"
+                htmlFor="item-cost"
+              >
+                Cost
+              </label>
+              <Input
+                id="item-cost"
+                name="cost"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value={values.cost ?? ""}
+                onChange={(event) => updateField("cost", event.target.value)}
+                aria-invalid={Boolean(errors.cost)}
+                aria-describedby={errors.cost ? "item-cost-error" : undefined}
+                className="h-11 border-white/10 bg-slate-950/40 text-white placeholder:text-slate-500"
+              />
+              {errors.cost ? (
+                <p id="item-cost-error" className="text-sm text-rose-400">
+                  {errors.cost}
+                </p>
+              ) : null}
             </div>
           </div>
 
@@ -226,7 +268,7 @@ export function ItemsCreateCard({
               id="item-aliases"
               name="aliases"
               placeholder="1-inch filter, standard return filter, media filter"
-              value={values.aliases}
+              value={values.aliases ?? ""}
               onChange={(event) => updateField("aliases", event.target.value)}
               className="h-11 border-white/10 bg-slate-950/40 text-white placeholder:text-slate-500"
             />

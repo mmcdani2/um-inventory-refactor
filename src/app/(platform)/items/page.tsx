@@ -13,6 +13,7 @@ type ItemRecord = {
   name: string
   uom: string
   barcode: string
+  cost: number | null
   aliases: string[]
 }
 
@@ -21,6 +22,7 @@ type CreateItemValues = {
   name: string
   uom: string
   barcode: string
+  cost: string
   aliases: string
 }
 
@@ -91,7 +93,10 @@ export default function ItemsPage() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(values),
+      body: JSON.stringify({
+        ...values,
+        cost: values.cost.trim() ? values.cost : undefined,
+      }),
     })
 
     const payload = (await response.json()) as {
@@ -105,12 +110,16 @@ export default function ItemsPage() {
     }
 
     const query = search.trim().toLowerCase()
+    const costText =
+      payload.item.cost === null ? "" : String(payload.item.cost).toLowerCase()
+
     const matchesCurrentSearch =
       !query ||
       payload.item.sku.toLowerCase().includes(query) ||
       payload.item.name.toLowerCase().includes(query) ||
       payload.item.uom.toLowerCase().includes(query) ||
       payload.item.barcode.toLowerCase().includes(query) ||
+      costText.includes(query) ||
       payload.item.aliases.some((alias) => alias.toLowerCase().includes(query))
 
     if (matchesCurrentSearch) {

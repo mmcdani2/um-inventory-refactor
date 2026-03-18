@@ -8,6 +8,7 @@ type CreateItemArgs = {
   name: string
   uom: string
   barcode?: string
+  cost?: number | string
   aliases?: string
   createdBy: string
 }
@@ -22,6 +23,7 @@ export async function createItem(args: CreateItemArgs) {
     name: args.name,
     uom: args.uom,
     barcode: args.barcode ?? "",
+    cost: args.cost,
     aliases: args.aliases ?? "",
   })
 
@@ -31,16 +33,18 @@ export async function createItem(args: CreateItemArgs) {
       name: parsed.name,
       sku: parsed.sku || null,
       barcode: parsed.barcode || null,
+      uom: parsed.uom || null,
+      cost: parsed.cost ?? null,
     },
   })
 
   return {
     ...item,
+    cost: item.cost ? Number(item.cost) : null,
     aliases: (parsed.aliases ?? "")
       .split(",")
       .map((alias) => alias.trim())
       .filter(Boolean),
-    uom: parsed.uom,
   }
 }
 
@@ -81,8 +85,9 @@ export async function searchItems({ query = "" }: SearchItemsArgs = {}) {
     id: item.id,
     sku: item.sku ?? "",
     name: item.name,
-    uom: "",
+    uom: item.uom ?? "",
     barcode: item.barcode ?? "",
+    cost: item.cost ? Number(item.cost) : null,
     aliases: [],
   }))
 }

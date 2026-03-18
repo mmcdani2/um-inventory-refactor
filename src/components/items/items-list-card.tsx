@@ -14,6 +14,7 @@ type ItemsListRow = {
   name: string
   uom: string
   barcode: string
+  cost: number | null
   aliases: string[]
 }
 
@@ -22,6 +23,17 @@ type ItemsListCardProps = {
   title?: string
   description?: string
   emptyMessage?: string
+}
+
+function formatCost(cost: number | null) {
+  if (cost === null) {
+    return "—"
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(cost)
 }
 
 export function ItemsListCard({
@@ -45,9 +57,10 @@ export function ItemsListCard({
         {hasItems ? (
           <div className="p-4 md:p-5">
             <div className="hidden rounded-2xl border border-white/10 bg-slate-950/30 md:block">
-              <div className="grid grid-cols-[minmax(0,1.4fr)_120px_minmax(0,1fr)] gap-4 border-b border-white/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+              <div className="grid grid-cols-[minmax(0,1.3fr)_100px_120px_minmax(0,1fr)] gap-4 border-b border-white/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                 <span>Item</span>
                 <span>UOM</span>
+                <span>Cost</span>
                 <span>Barcode / Aliases</span>
               </div>
 
@@ -55,7 +68,7 @@ export function ItemsListCard({
                 {items.map((item) => (
                   <div
                     key={item.id}
-                    className="grid grid-cols-[minmax(0,1.4fr)_120px_minmax(0,1fr)] gap-4 px-4 py-4"
+                    className="grid grid-cols-[minmax(0,1.3fr)_100px_120px_minmax(0,1fr)] gap-4 px-4 py-4"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-white">
@@ -68,7 +81,13 @@ export function ItemsListCard({
 
                     <div className="min-w-0">
                       <p className="truncate text-sm text-slate-300">
-                        {item.uom}
+                        {item.uom || "—"}
+                      </p>
+                    </div>
+
+                    <div className="min-w-0">
+                      <p className="truncate text-sm text-slate-300">
+                        {formatCost(item.cost)}
                       </p>
                     </div>
 
@@ -105,7 +124,18 @@ export function ItemsListCard({
                       <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
                         UOM
                       </p>
-                      <p className="text-sm text-slate-300">{item.uom}</p>
+                      <p className="text-sm text-slate-300">
+                        {item.uom || "—"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
+                        Cost
+                      </p>
+                      <p className="text-sm text-slate-300">
+                        {formatCost(item.cost)}
+                      </p>
                     </div>
 
                     <div>
