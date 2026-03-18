@@ -2,7 +2,23 @@
 import { NextResponse } from "next/server"
 import { ZodError } from "zod"
 
-import { createItem } from "@/lib/services/items"
+import { createItem, searchItems } from "@/lib/services/items"
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const query = searchParams.get("q") ?? ""
+
+    const items = await searchItems({ query })
+
+    return NextResponse.json({ items })
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Failed to load items."
+
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
 
 export async function POST(request: Request) {
   try {

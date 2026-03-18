@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 
 import { ItemsCreateCard } from "@/components/items/items-create-card"
 import { ItemsListCard } from "@/components/items/items-list-card"
@@ -11,8 +11,8 @@ type ItemRecord = {
   id: string
   sku: string
   name: string
-  unitOfMeasure: string
-  barcode: string | null
+  uom: string
+  barcode: string
   aliases: string[]
 }
 
@@ -27,6 +27,63 @@ type CreateItemValues = {
 export default function ItemsPage() {
   const [search, setSearch] = useState("")
   const [items, setItems] = useState<ItemRecord[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+    const controller = new AbortController()
+
+    async function loadItems() {
+      try {
+        setIsLoading(true)
+
+        const query = search.trim()
+        const url = query
+          ? `/api/items?q=${encodeURIComponent(query)}`
+          : "/api/items"
+
+        const response = await fetch(url, {
+          method: "GET",
+          cache: "no-store",
+          signal: controller.signal,
+        })
+
+        const payload = (await response.json()) as {
+          items?: ItemRecord[]
+          error?: string
+        }
+
+        if (!response.ok) {
+          throw new Error(payload.error ?? "Failed to load items.")
+        }
+
+        if (isMounted) {
+          setItems(payload.items ?? [])
+        }
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return
+        }
+
+        console.error(error)
+
+        if (isMounted) {
+          setItems([])
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadItems()
+
+    return () => {
+      isMounted = false
+      controller.abort()
+    }
+  }, [search])
 
   async function handleCreateItem(values: CreateItemValues) {
     const response = await fetch("/api/items", {
@@ -47,35 +104,19 @@ export default function ItemsPage() {
       throw new Error(payload.error ?? "Failed to create item.")
     }
 
-    setItems((current) => [payload.item as ItemRecord, ...current])
-  }
-
-  const filteredItems = useMemo(() => {
     const query = search.trim().toLowerCase()
+    const matchesCurrentSearch =
+      !query ||
+      payload.item.sku.toLowerCase().includes(query) ||
+      payload.item.name.toLowerCase().includes(query) ||
+      payload.item.uom.toLowerCase().includes(query) ||
+      payload.item.barcode.toLowerCase().includes(query) ||
+      payload.item.aliases.some((alias) => alias.toLowerCase().includes(query))
 
-    if (!query) {
-      return items
+    if (matchesCurrentSearch) {
+      setItems((current) => [payload.item as ItemRecord, ...current])
     }
-
-    return items.filter((item) => {
-      return (
-        item.sku.toLowerCase().includes(query) ||
-        item.name.toLowerCase().includes(query) ||
-        item.unitOfMeasure.toLowerCase().includes(query) ||
-        (item.barcode ?? "").toLowerCase().includes(query) ||
-        item.aliases.some((alias) => alias.toLowerCase().includes(query))
-      )
-    })
-  }, [items, search])
-
-  const listItems = filteredItems.map((item) => ({
-    id: item.id,
-    sku: item.sku,
-    name: item.name,
-    uom: item.unitOfMeasure,
-    barcode: item.barcode ?? "",
-    aliases: item.aliases,
-  }))
+  }
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,#1d2740_0%,#0b1020_32%,#050814_100%)]">
@@ -89,7 +130,10 @@ export default function ItemsPage() {
 
         <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)] xl:items-start">
           <ItemsCreateCard onSubmit={handleCreateItem} />
-          <ItemsListCard items={listItems} />
+          <ItemsListCard
+            items={items}
+            emptyMessage={isLoading ? "Loading items..." : "No items yet."}
+          />
         </div>
       </div>
     </div>

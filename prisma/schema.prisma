@@ -14,33 +14,11 @@ model User {
 }
 
 model Location {
-  id        String   @id @default(cuid())
-  name      String
-  code      String   @unique
-  createdAt DateTime @default(now())
-
+  id          String      @id @default(cuid())
+  name        String
+  code        String      @unique
+  createdAt   DateTime    @default(now())
   inventories Inventory[]
-}
-
-model Item {
-  id            String      @id @default(uuid())
-  sku           String      @unique
-  name          String
-  aliases       String[]    @default([])
-  unitOfMeasure String
-  barcode       String?     @unique
-  category      String?
-  photoUrl      String?
-  isActive      Boolean     @default(true)
-  createdBy     String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-
-  inventories Inventory[]
-
-  @@index([name])
-  @@index([isActive, name])
-  @@index([createdBy])
 }
 
 model Inventory {
@@ -48,9 +26,17 @@ model Inventory {
   itemId     String
   locationId String
   quantity   Int      @default(0)
-
   item       Item     @relation(fields: [itemId], references: [id])
   location   Location @relation(fields: [locationId], references: [id])
 
   @@unique([itemId, locationId])
+}
+
+model Item {
+  id          String      @id
+  name        String
+  sku         String?
+  barcode     String?     @unique
+  createdAt   DateTime    @default(now())
+  inventories Inventory[]
 }

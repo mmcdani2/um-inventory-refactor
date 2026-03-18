@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id
+  clerkId   String   @unique
+  email     String
+  createdAt DateTime @default(now())
+}
+
+model Location {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  createdAt DateTime @default(now())
+
+  inventories Inventory[]
+}
+
+model Item {
+  id         String      @id @db.Uuid
+  sku        String      @db.VarChar
+  partNumber String?     @map("part_number") @db.VarChar
+  name       String      @db.VarChar
+  description String?    @db.Text
+  category   String?     @db.VarChar
+  unit       String?     @db.VarChar
+  minQty     Decimal?    @map("min_qty") @db.Decimal
+  reorderQty Decimal?    @map("reorder_qty") @db.Decimal
+  isActive   Boolean?    @map("is_active")
+  createdAt  DateTime?   @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime?   @map("updated_at") @db.Timestamptz(6)
+
+  inventories Inventory[]
+
+  @@map("items")
+}
+
+model Inventory {
+  id         String   @id @default(cuid())
+  itemId     String
+  locationId String
+  quantity   Int      @default(0)
+
+  item       Item     @relation(fields: [itemId], references: [id])
+  location   Location @relation(fields: [locationId], references: [id])
+
+  @@unique([itemId, locationId])
+}

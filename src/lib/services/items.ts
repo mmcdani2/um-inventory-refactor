@@ -1,4 +1,6 @@
-﻿import { prisma } from "@/lib/prisma"
+﻿import { randomUUID } from "crypto"
+
+import { prisma } from "@/lib/prisma"
 import { createItemSchema } from "@/lib/validators/items"
 
 type CreateItemArgs = {
@@ -10,6 +12,10 @@ type CreateItemArgs = {
   createdBy: string
 }
 
+type SearchItemsArgs = {
+  query?: string
+}
+
 export async function createItem(args: CreateItemArgs) {
   const parsed = createItemSchema.parse({
     sku: args.sku,
@@ -19,29 +25,64 @@ export async function createItem(args: CreateItemArgs) {
     aliases: args.aliases ?? "",
   })
 
-  const aliases = (parsed.aliases ?? "")
-    .split(",")
-    .map((alias) => alias.trim())
-    .filter(Boolean)
-
-  const createdBy = args.createdBy.trim()
-
-  if (!createdBy) {
-    throw new Error("createdBy is required.")
-  }
-
   const item = await prisma.item.create({
     data: {
-      sku: parsed.sku,
+      id: randomUUID(),
       name: parsed.name,
-      unitOfMeasure: parsed.uom,
+      sku: parsed.sku || null,
       barcode: parsed.barcode || null,
-      createdBy,
     },
   })
 
   return {
     ...item,
-    aliases,
+    aliases: (parsed.aliases ?? "")
+      .split(",")
+      .map((alias) => alias.trim())
+      .filter(Boolean),
+    uom: parsed.uom,
   }
+}
+
+export async function searchItems({ query = "" }: SearchItemsArgs = {}) {
+  const trimmedQuery = query.trim()
+
+  const items = await prisma.item.findMany({
+    where: trimmedQuery
+      ? {
+          OR: [
+            {
+              name: {
+                contains: trimmedQuery,
+                mode: "insensitive",
+              },
+            },
+            {
+              sku: {
+                contains: trimmedQuery,
+                mode: "insensitive",
+              },
+            },
+            {
+              barcode: {
+                contains: trimmedQuery,
+                mode: "insensitive",
+              },
+            },
+          ],
+        }
+      : undefined,
+    orderBy: {
+      createdAt: "desc",
+    },
+  })
+
+  return items.map((item) => ({
+    id: item.id,
+    sku: item.sku ?? "",
+    name: item.name,
+    uom: "",
+    barcode: item.barcode ?? "",
+    aliases: [],
+  }))
 }
