@@ -26,10 +26,27 @@ type CreateItemValues = {
   aliases: string
 }
 
+type EditItemValues = CreateItemValues & {
+  id: string
+}
+
+function toEditValues(item: ItemRecord): EditItemValues {
+  return {
+    id: item.id,
+    sku: item.sku,
+    name: item.name,
+    uom: item.uom,
+    barcode: item.barcode,
+    cost: item.cost === null ? "" : String(item.cost),
+    aliases: item.aliases.join(", "),
+  }
+}
+
 export default function ItemsPage() {
   const [search, setSearch] = useState("")
   const [items, setItems] = useState<ItemRecord[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [editingItem, setEditingItem] = useState<EditItemValues | null>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -127,6 +144,38 @@ export default function ItemsPage() {
     }
   }
 
+  async function handleUpdateItem(values: EditItemValues) {
+    const response = await fetch(`/api/items/${values.id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sku: values.sku,
+        name: values.name,
+        uom: values.uom,
+        barcode: values.barcode,
+        cost: values.cost.trim() ? values.cost : undefined,
+        aliases: values.aliases,
+      }),
+    })
+
+    const payload = (await response.json()) as {
+      item?: ItemRecord
+      error?: string
+      fieldErrors?: Record<string, string[] | undefined>
+    }
+
+    if (!response.ok || !payload.item) {
+      throw new Error(payload.error ?? "Failed to update item.")
+    }
+
+    setItems((current) =>
+      current.map((item) => (item.id === payload.item!.id ? payload.item! : item))
+    )
+    setEditingItem(null)
+  }
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,#1d2740_0%,#0b1020_32%,#050814_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 md:px-6 md:py-8 xl:gap-8">
@@ -138,10 +187,16 @@ export default function ItemsPage() {
         />
 
         <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)] xl:items-start">
-          <ItemsCreateCard onSubmit={handleCreateItem} />
+          <ItemsCreateCard
+            mode={editingItem ? "edit" : "create"}
+            initialValues={editingItem ?? undefined}
+            onSubmit={editingItem ? handleUpdateItem : handleCreateItem}
+            onCancel={editingItem ? () => setEditingItem(null) : undefined}
+          />
           <ItemsListCard
             items={items}
             emptyMessage={isLoading ? "Loading items..." : "No items yet."}
+            onEditItem={(item) => setEditingItem(toEditValues(item))}
           />
         </div>
       </div>

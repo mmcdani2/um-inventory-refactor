@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import type { FormEvent, JSX } from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -26,7 +26,10 @@ type CreateItemFormValues = {
 type CreateItemFormErrors = Partial<Record<keyof CreateItemFormValues, string>>
 
 type ItemsCreateCardProps = {
+  mode?: "create" | "edit"
+  initialValues?: CreateItemFormValues
   onSubmit?: (values: CreateItemFormValues) => void | Promise<void>
+  onCancel?: () => void
 }
 
 const initialValues: CreateItemFormValues = {
@@ -41,11 +44,21 @@ const initialValues: CreateItemFormValues = {
 const initialErrors: CreateItemFormErrors = {}
 
 export function ItemsCreateCard({
+  mode = "create",
+  initialValues: initialFormValues,
   onSubmit,
+  onCancel,
 }: ItemsCreateCardProps): JSX.Element {
-  const [values, setValues] = useState<CreateItemFormValues>(initialValues)
+  const [values, setValues] = useState<CreateItemFormValues>(
+    initialFormValues ?? initialValues
+  )
   const [errors, setErrors] = useState<CreateItemFormErrors>(initialErrors)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    setValues(initialFormValues ?? initialValues)
+    setErrors(initialErrors)
+  }, [initialFormValues])
 
   function updateField<K extends keyof CreateItemFormValues>(
     field: K,
@@ -121,19 +134,28 @@ export function ItemsCreateCard({
     try {
       setIsSubmitting(true)
       await onSubmit(trimmedValues)
-      setValues(initialValues)
-      setErrors(initialErrors)
+
+      if (mode === "create") {
+        setValues(initialValues)
+        setErrors(initialErrors)
+      }
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  const isEditMode = mode === "edit"
+
   return (
     <Card className="overflow-hidden border-white/10 bg-white/[0.04] shadow-[0_18px_60px_-32px_rgba(15,23,42,0.95)] backdrop-blur">
       <CardHeader className="border-b border-white/10 pb-4">
-        <CardTitle className="text-white">Create item</CardTitle>
+        <CardTitle className="text-white">
+          {isEditMode ? "Edit item" : "Create item"}
+        </CardTitle>
         <CardDescription className="text-slate-400">
-          Add clean master data before you start receiving and moving stock.
+          {isEditMode
+            ? "Update item master data and save your changes."
+            : "Add clean master data before you start receiving and moving stock."}
         </CardDescription>
       </CardHeader>
 
@@ -279,13 +301,30 @@ export function ItemsCreateCard({
           </div>
         </CardContent>
 
-        <CardFooter className="justify-end border-t border-white/10 pt-5">
+        <CardFooter className="justify-end gap-3 border-t border-white/10 pt-5">
+          {isEditMode ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              className="border-white/10 bg-transparent text-slate-200 hover:bg-white/5 hover:text-white"
+            >
+              Cancel
+            </Button>
+          ) : null}
+
           <Button
             type="submit"
             disabled={isSubmitting}
             className="min-w-32 bg-blue-500 text-white hover:bg-blue-400"
           >
-            {isSubmitting ? "Creating..." : "Create Item"}
+            {isSubmitting
+              ? isEditMode
+                ? "Saving..."
+                : "Creating..."
+              : isEditMode
+                ? "Save Changes"
+                : "Create Item"}
           </Button>
         </CardFooter>
       </form>

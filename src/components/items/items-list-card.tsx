@@ -1,5 +1,6 @@
 ﻿import type { JSX } from "react"
 
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -23,6 +24,7 @@ type ItemsListCardProps = {
   title?: string
   description?: string
   emptyMessage?: string
+  onEditItem?: (item: ItemsListRow) => void
 }
 
 function formatCost(cost: number | null) {
@@ -41,6 +43,7 @@ export function ItemsListCard({
   title = "Items list",
   description = "Review item master records before wiring search and live data.",
   emptyMessage = "No items yet.",
+  onEditItem,
 }: ItemsListCardProps): JSX.Element {
   const hasItems = items.length > 0
 
@@ -57,18 +60,19 @@ export function ItemsListCard({
         {hasItems ? (
           <div className="p-4 md:p-5">
             <div className="hidden rounded-2xl border border-white/10 bg-slate-950/30 md:block">
-              <div className="grid grid-cols-[minmax(0,1.3fr)_100px_120px_minmax(0,1fr)] gap-4 border-b border-white/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+              <div className="grid grid-cols-[minmax(0,1.3fr)_100px_120px_minmax(0,1fr)_96px] gap-4 border-b border-white/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                 <span>Item</span>
                 <span>UOM</span>
                 <span>Cost</span>
                 <span>Barcode / Aliases</span>
+                <span className="text-right">Action</span>
               </div>
 
               <div className="divide-y divide-white/10">
                 {items.map((item) => (
                   <div
                     key={item.id}
-                    className="grid grid-cols-[minmax(0,1.3fr)_100px_120px_minmax(0,1fr)] gap-4 px-4 py-4"
+                    className="grid grid-cols-[minmax(0,1.3fr)_100px_120px_minmax(0,1fr)_96px] gap-4 px-4 py-4"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-white">
@@ -100,6 +104,17 @@ export function ItemsListCard({
                           ? item.aliases.join(", ")
                           : "No aliases"}
                       </p>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => onEditItem?.(item)}
+                        className="border-white/10 bg-transparent text-slate-200 hover:bg-white/5 hover:text-white"
+                      >
+                        Edit
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -156,6 +171,17 @@ export function ItemsListCard({
                           ? item.aliases.join(", ")
                           : "No aliases"}
                       </p>
+                    </div>
+
+                    <div className="pt-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => onEditItem?.(item)}
+                        className="w-full border-white/10 bg-transparent text-slate-200 hover:bg-white/5 hover:text-white"
+                      >
+                        Edit
+                      </Button>
                     </div>
                   </div>
                 </div>

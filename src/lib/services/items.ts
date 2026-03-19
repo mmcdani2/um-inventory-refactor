@@ -13,6 +13,16 @@ type CreateItemArgs = {
   createdBy: string
 }
 
+type UpdateItemArgs = {
+  id: string
+  sku: string
+  name: string
+  uom: string
+  barcode?: string
+  cost?: number | string
+  aliases?: string
+}
+
 type SearchItemsArgs = {
   query?: string
 }
@@ -30,6 +40,45 @@ export async function createItem(args: CreateItemArgs) {
   const item = await prisma.item.create({
     data: {
       id: randomUUID(),
+      name: parsed.name,
+      sku: parsed.sku || null,
+      barcode: parsed.barcode || null,
+      uom: parsed.uom || null,
+      cost: parsed.cost ?? null,
+    },
+  })
+
+  return {
+    ...item,
+    cost: item.cost ? Number(item.cost) : null,
+    aliases: (parsed.aliases ?? "")
+      .split(",")
+      .map((alias) => alias.trim())
+      .filter(Boolean),
+  }
+}
+
+export async function updateItem(args: UpdateItemArgs) {
+  const id = args.id.trim()
+
+  if (!id) {
+    throw new Error("Item id is required.")
+  }
+
+  const parsed = createItemSchema.parse({
+    sku: args.sku,
+    name: args.name,
+    uom: args.uom,
+    barcode: args.barcode ?? "",
+    cost: args.cost,
+    aliases: args.aliases ?? "",
+  })
+
+  const item = await prisma.item.update({
+    where: {
+      id,
+    },
+    data: {
       name: parsed.name,
       sku: parsed.sku || null,
       barcode: parsed.barcode || null,
